@@ -7,7 +7,7 @@ export interface PdfFile {
 export interface Annotation {
   id: string;
   pageIndex: number;
-  type: 'text' | 'highlight';
+  type: 'text' | 'highlight' | 'drawing';
   // Percentage-based coordinates (0-100)
   x: number;
   y: number;
@@ -15,9 +15,12 @@ export interface Annotation {
   height: number;
   content?: string; // For text annotations
   color: string;
+  opacity?: number;
+  points?: { x: number; y: number }[]; // For drawing annotations
+  strokeWidth?: number; // For drawing annotations
 }
 
-export type Tool = 'select' | 'text' | 'highlight';
+export type Tool = 'select' | 'text' | 'highlight' | 'draw';
 
 export interface EditorState {
   // Current file
@@ -35,6 +38,13 @@ export interface EditorState {
   // Annotations
   annotations: Annotation[];
 
+  // Color / opacity
+  annotationColor: string;
+  annotationOpacity: number;
+
+  // Page rotations (original page index -> degrees)
+  pageRotations: Record<number, number>;
+
   // Actions
   setFile: (file: PdfFile, data: ArrayBuffer) => void;
   clearFile: () => void;
@@ -45,4 +55,9 @@ export interface EditorState {
   addAnnotation: (annotation: Annotation) => void;
   updateAnnotation: (id: string, updates: Partial<Annotation>) => void;
   removeAnnotation: (id: string) => void;
+  setAnnotationColor: (color: string) => void;
+  setAnnotationOpacity: (opacity: number) => void;
+  deletePage: (displayIndex: number) => void;
+  rotatePage: (pageIndex: number, degrees: number) => void;
+  rotateAllPages: (degrees: number) => void;
 }

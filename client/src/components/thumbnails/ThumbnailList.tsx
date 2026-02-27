@@ -25,6 +25,9 @@ export function ThumbnailList({ pdfDoc }: Props) {
   const setPageOrder = useEditorStore((s) => s.setPageOrder);
   const currentPage = useEditorStore((s) => s.currentPage);
   const setCurrentPage = useEditorStore((s) => s.setCurrentPage);
+  const pageRotations = useEditorStore((s) => s.pageRotations);
+  const deletePage = useEditorStore((s) => s.deletePage);
+  const rotatePage = useEditorStore((s) => s.rotatePage);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -57,7 +60,14 @@ export function ThumbnailList({ pdfDoc }: Props) {
               pageIndex={originalIndex}
               displayIndex={displayIndex}
               isActive={displayIndex === currentPage}
+              rotation={pageRotations[originalIndex] || 0}
               onClick={() => setCurrentPage(displayIndex)}
+              onDelete={
+                pageOrder.length > 1
+                  ? () => deletePage(displayIndex)
+                  : undefined
+              }
+              onRotate={(degrees) => rotatePage(originalIndex, degrees)}
             />
           ))}
         </div>

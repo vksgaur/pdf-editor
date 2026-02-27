@@ -14,7 +14,10 @@ export function PageCanvas({ pdfDoc, pageIndex, isActive }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const zoom = useEditorStore((s) => s.zoom);
+  const pageRotations = useEditorStore((s) => s.pageRotations);
   const renderTaskRef = useRef<ReturnType<PDFPageProxy['render']> | null>(null);
+
+  const rotation = pageRotations[pageIndex] || 0;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -25,12 +28,11 @@ export function PageCanvas({ pdfDoc, pageIndex, isActive }: Props) {
     pdfDoc.getPage(pageIndex + 1).then((page) => {
       if (cancelled) return;
 
-      // Cancel any in-progress render
       if (renderTaskRef.current) {
         renderTaskRef.current.cancel();
       }
 
-      const viewport = page.getViewport({ scale: zoom * 1.5 });
+      const viewport = page.getViewport({ scale: zoom * 1.5, rotation });
       canvas.width = viewport.width;
       canvas.height = viewport.height;
 
@@ -49,7 +51,7 @@ export function PageCanvas({ pdfDoc, pageIndex, isActive }: Props) {
         renderTaskRef.current.cancel();
       }
     };
-  }, [pdfDoc, pageIndex, zoom]);
+  }, [pdfDoc, pageIndex, zoom, rotation]);
 
   return (
     <div

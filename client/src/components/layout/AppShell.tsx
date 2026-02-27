@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useEditorStore } from '../../store/editorStore';
 import { usePdfDocument } from '../../hooks/usePdfDocument';
 import { useZoom } from '../../hooks/useZoom';
+import { useUndoRedo } from '../../hooks/useUndoRedo';
 import { uploadPdf, downloadPdf } from '../../services/api';
 import { exportPdf } from '../../utils/pdfExport';
 import { Toolbar } from './Toolbar';
@@ -15,9 +16,11 @@ export function AppShell() {
   const pdfData = useEditorStore((s) => s.pdfData);
   const pageOrder = useEditorStore((s) => s.pageOrder);
   const annotations = useEditorStore((s) => s.annotations);
+  const pageRotations = useEditorStore((s) => s.pageRotations);
   const setFile = useEditorStore((s) => s.setFile);
   const { pdfDoc, loading, error } = usePdfDocument(pdfData);
   const { zoomIn, zoomOut } = useZoom();
+  const { undo, redo } = useUndoRedo();
 
   const [showMerge, setShowMerge] = useState(false);
   const [showSplit, setShowSplit] = useState(false);
@@ -61,7 +64,7 @@ export function AppShell() {
   const handleExport = useCallback(async () => {
     if (!pdfData) return;
     try {
-      const bytes = await exportPdf(pdfData, pageOrder, annotations);
+      const bytes = await exportPdf(pdfData, pageOrder, annotations, pageRotations);
       const blob = new Blob([bytes.buffer as ArrayBuffer], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -72,22 +75,29 @@ export function AppShell() {
     } catch {
       alert('Export failed');
     }
-  }, [pdfData, pageOrder, annotations, file]);
+  }, [pdfData, pageOrder, annotations, pageRotations, file]);
 
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === '=' && (e.ctrlKey || e.metaKey)) {
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (e.key === '=' && ctrl) {
         e.preventDefault();
         zoomIn();
-      } else if (e.key === '-' && (e.ctrlKey || e.metaKey)) {
+      } else if (e.key === '-' && ctrl) {
         e.preventDefault();
         zoomOut();
+      } else if (e.key === 'z' && ctrl && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if (e.key === 'z' && ctrl && e.shiftKey) {
+        e.preventDefault();
+        redo();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [zoomIn, zoomOut]);
+  }, [zoomIn, zoomOut, undo, redo]);
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
