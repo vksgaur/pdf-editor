@@ -1,0 +1,11 @@
+{
+  "name": "pdf-editor",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "cd client && npm install && cd ../server && npm install",
+    "build": "cd client && npm run build && cd ../server && npx tsc",
+    "start": "cd server && node dist/index.js",
+    "dev": "concurrently \"cd server && npm run dev\" \"cd client && npm run dev\""
+  }
+}
